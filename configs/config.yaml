@@ -1,0 +1,38 @@
+model:
+  weights: "yolov8n.pt"
+  confidence: 0.4
+  device: "cpu"
+
+tracker:
+  type: "bytetrack"
+  track_thresh: 0.5
+
+classes:
+  # COCO class names to keep. Empty list = keep all.
+  filter: ["person", "car"]
+
+performance:
+  frame_skip: 1        # process every Nth frame (1 = no skip)
+  resize_width: 640     # resize frame width before inference (0 = no resize)
+
+counting:
+  enabled: true
+  line_start: [0, 300]   # [x, y] pixel coords
+  line_end: [640, 300]
+
+speed_estimation:
+  enabled: true
+  pixels_per_meter: 20   # calibrate for your camera view
+  fps_override: 0         # 0 = use video's real fps
+
+cropping:
+  enabled: false
+  save_dir: "outputs/crops"
+
+video:
+  input_path: "data/raw/traffic_1.mp4"
+  output_path: "outputs/videos/tracked_output.mp4"
+  show_live: false
+
+logging:
+  log_path: "outputs/logs/tracks.csv"
