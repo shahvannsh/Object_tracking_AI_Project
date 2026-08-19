@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Object Tracking Project
 
 Multi-object detection + tracking pipeline using YOLOv8 + ByteTrack. Includes
@@ -94,3 +95,6 @@ object-tracking-project/
 | `counting.line_start/end` | pixel coords of counting line |
 | `speed_estimation.pixels_per_meter` | calibrate to your camera |
 | `cropping.enabled` | save cropped images per track |
+=======
+# Object_tracking_AI_Project
+>>>>>>> 6afa0a54217c3017f4d1ff2564af48705ef1b605
