@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.pt
+data/raw/*
+outputs/videos/*
+outputs/logs/*
+outputs/crops/*
+!data/raw/.gitkeep
+!outputs/videos/.gitkeep
+!outputs/logs/.gitkeep
