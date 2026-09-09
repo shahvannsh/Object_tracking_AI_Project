@@ -1,11 +1,9 @@
 class LineCounter:
-    """Counts unique track IDs crossing a line (simple midpoint-side check)."""
-
     def __init__(self, line_start, line_end):
         self.line_start = line_start
         self.line_end = line_end
         self.counted_ids = set()
-        self.track_sides = {}  # track_id -> last side (+1/-1)
+        self.track_sides = {}
 
     def _side(self, point):
         x1, y1 = self.line_start

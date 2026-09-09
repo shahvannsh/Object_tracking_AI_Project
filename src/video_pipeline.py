@@ -1,5 +1,8 @@
 import csv
 import cv2
+from collections import Counter
+
+from torch.utils.tensorboard import SummaryWriter
 
 from src.detector import Detector
 from src.tracker import Tracker
@@ -59,6 +62,14 @@ def run_pipeline(config: dict):
 
     crop_cfg = config.get("cropping", {})
 
+    # --- TensorBoard setup ---
+    tb_cfg = config.get("tensorboard", {})
+    tb_writer = None
+    class_counter = Counter()          # total detections per class (all frames)
+    unique_ids_per_class = {}          # class_name -> set of track_ids (unique objects)
+    if tb_cfg.get("enabled", True):
+        tb_writer = SummaryWriter(tb_cfg.get("log_dir", "outputs/tensorboard_logs"))
+
     frame_idx = 0
     processed_idx = 0
     try:
@@ -82,6 +93,10 @@ def run_pipeline(config: dict):
                 box = tracked.xyxy[i]
                 track_id = tracked.tracker_id[i]
                 cls_id = tracked.class_id[i]
+                cls_name = detector.model.names[cls_id]
+
+                class_counter[cls_name] += 1
+                unique_ids_per_class.setdefault(cls_name, set()).add(track_id)
 
                 speed_kmh = None
                 if speed_estimator:
@@ -106,6 +121,13 @@ def run_pipeline(config: dict):
 
             out.write(frame)
 
+            # Live per-frame detection counts to TensorBoard
+            if tb_writer:
+                tb_writer.add_scalar("detections/per_frame_total", len(tracked), processed_idx)
+                frame_class_counts = Counter(class_names)
+                for cls_name, cnt in frame_class_counts.items():
+                    tb_writer.add_scalar(f"detections_per_frame/{cls_name}", cnt, processed_idx)
+
             if config["video"].get("show_live"):
                 cv2.imshow("Tracking", frame)
                 key = cv2.waitKey(1) & 0xFF
@@ -124,6 +146,23 @@ def run_pipeline(config: dict):
         out.release()
         log_file.close()
         cv2.destroyAllWindows()
+
+        if tb_writer:
+            for cls_name, cnt in class_counter.items():
+                tb_writer.add_text(
+                    f"summary/{cls_name}",
+                    f"Total detections: {cnt} | Unique tracked objects: {len(unique_ids_per_class.get(cls_name, []))}"
+                )
+            tb_writer.close()
+            print(f"TensorBoard logs saved to: {tb_cfg.get('log_dir', 'outputs/tensorboard_logs')}")
+            print("Run: tensorboard --logdir outputs/tensorboard_logs")
+
         if counter:
             print(f"Total line-crossing count: {counter.count}")
+
+        print("Class detection summary:")
+        for cls_name, cnt in class_counter.items():
+            unique_count = len(unique_ids_per_class.get(cls_name, []))
+            print(f"  {cls_name}: {cnt} detections, {unique_count} unique objects")
+
         print("Resources released. Video and log saved.")

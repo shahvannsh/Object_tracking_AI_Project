@@ -9,3 +9,5 @@ pydantic==2.13.0
 streamlit==1.38.0
 pandas==2.2.3
 motmetrics==1.4.0
+tensorboard==2.18.0
+torch>=1.8.0

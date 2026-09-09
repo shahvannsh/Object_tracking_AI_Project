@@ -1,13 +1,8 @@
-import time
-
-
 class SpeedEstimator:
-    """Estimates speed (km/h) from pixel displacement between frames."""
-
     def __init__(self, pixels_per_meter: float, fps: float):
         self.pixels_per_meter = pixels_per_meter
         self.fps = fps
-        self.prev_positions = {}  # track_id -> (x, y)
+        self.prev_positions = {}
 
     def update(self, track_id, box):
         x1, y1, x2, y2 = box

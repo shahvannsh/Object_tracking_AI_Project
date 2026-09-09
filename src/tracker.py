@@ -2,7 +2,7 @@ import supervision as sv
 
 
 class Tracker:
-    def __init__(self, track_thresh: float = 0.5, match_thresh: float = 0.8):
+    def __init__(self, track_thresh: float = 0.5):
         self.tracker = sv.ByteTrack(
             track_activation_threshold=track_thresh,
         )
@@ -14,4 +14,4 @@ class Tracker:
             class_id=class_ids,
         )
         tracked = self.tracker.update_with_detections(detections)
-        return tracked  # has .tracker_id per detection
+        return tracked

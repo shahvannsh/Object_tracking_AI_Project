@@ -1,11 +1,6 @@
 """
 MOTA / IDF1 evaluation against ground truth in MOT format.
-
-Ground truth and prediction CSVs need columns:
-frame, track_id, x1, y1, x2, y2
-
-Usage:
-    python evaluation/metrics.py --gt data/annotations/gt.csv --pred outputs/logs/tracks.csv
+Usage: python evaluation/metrics.py --gt data/annotations/gt.csv --pred outputs/logs/tracks.csv
 """
 import argparse
 import pandas as pd
@@ -24,7 +19,6 @@ def compute_metrics(gt_path: str, pred_path: str):
     pred = pd.read_csv(pred_path)
 
     acc = mm.MOTAccumulator(auto_id=True)
-
     frames = sorted(set(gt["frame"]).union(pred["frame"]))
     for frame in frames:
         gt_frame = gt[gt["frame"] == frame]

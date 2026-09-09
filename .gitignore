@@ -5,6 +5,8 @@ data/raw/*
 outputs/videos/*
 outputs/logs/*
 outputs/crops/*
+outputs/tensorboard_logs/*
 !data/raw/.gitkeep
 !outputs/videos/.gitkeep
 !outputs/logs/.gitkeep
+!outputs/crops/.gitkeep

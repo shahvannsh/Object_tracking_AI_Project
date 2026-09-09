@@ -1,5 +1,5 @@
 """
-Streamlit UI: upload a video, run tracking pipeline, view result.
+Streamlit UI: upload a video, run tracking pipeline, view result + class-count chart.
 
 Run with: streamlit run app.py
 """
@@ -7,6 +7,7 @@ import streamlit as st
 import yaml
 import tempfile
 import os
+import pandas as pd
 
 from src.video_pipeline import run_pipeline
 
@@ -37,6 +38,7 @@ if uploaded_file and st.button("Run Tracking"):
     config["model"]["confidence"] = confidence
     config["classes"]["filter"] = class_options
     config["logging"]["log_path"] = "outputs/logs/streamlit_tracks.csv"
+    config["tensorboard"]["log_dir"] = "outputs/tensorboard_logs"
 
     os.makedirs("outputs/videos", exist_ok=True)
     os.makedirs("outputs/logs", exist_ok=True)
@@ -49,3 +51,25 @@ if uploaded_file and st.button("Run Tracking"):
 
     with open(config["logging"]["log_path"], "rb") as f:
         st.download_button("Download tracking log (CSV)", f, file_name="tracks.csv")
+
+    # --- Class detection chart ---
+    st.subheader("📊 Detections per class")
+    df = pd.read_csv(config["logging"]["log_path"])
+
+    class_id_to_name = {v: k for k, v in {}.items()}  # placeholder, filled below
+    # Load class names from the model used in this run
+    from ultralytics import YOLO
+    model = YOLO(config["model"]["weights"])
+    df["class_name"] = df["class"].map(model.names)
+
+    total_counts = df["class_name"].value_counts()
+    st.bar_chart(total_counts)
+
+    unique_counts = df.groupby("class_name")["track_id"].nunique()
+    st.write("Unique tracked objects per class:")
+    st.bar_chart(unique_counts)
+
+    st.info(
+        "For a more detailed live view (per-frame trends), run:\n\n"
+        "`tensorboard --logdir outputs/tensorboard_logs`"
+    )

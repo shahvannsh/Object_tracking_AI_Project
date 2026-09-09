@@ -3,7 +3,6 @@ import os
 
 
 def confidence_color(score: float):
-    """Green (high conf) -> Yellow -> Red (low conf)."""
     if score >= 0.7:
         return (0, 255, 0)
     elif score >= 0.5:
