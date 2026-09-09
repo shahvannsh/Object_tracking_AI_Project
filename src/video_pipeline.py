@@ -9,6 +9,7 @@ from src.tracker import Tracker
 from src.utils import draw_tracks, draw_counting_line, save_crop
 from src.counter import LineCounter
 from src.speed_estimator import SpeedEstimator
+from src.classifier import CifarClassifier
 
 
 def run_pipeline(config: dict):
@@ -47,12 +48,16 @@ def run_pipeline(config: dict):
 
     log_file = open(config["logging"]["log_path"], "w", newline="")
     log_writer = csv.writer(log_file)
-    log_writer.writerow(["frame", "track_id", "class", "x1", "y1", "x2", "y2", "speed_kmh"])
+    log_writer.writerow(["frame", "track_id", "class", "x1", "y1", "x2", "y2", "speed_kmh", "cifar_class", "cifar_conf"])
 
     count_cfg = config.get("counting", {})
     counter = None
     if count_cfg.get("enabled"):
         counter = LineCounter(count_cfg["line_start"], count_cfg["line_end"])
+        print(f"[Counting] frame size: {out_width}x{out_height} | line: {count_cfg['line_start']} -> {count_cfg['line_end']}")
+        if (count_cfg["line_start"][0] > out_width or count_cfg["line_end"][0] > out_width or
+                count_cfg["line_start"][1] > out_height or count_cfg["line_end"][1] > out_height):
+            print("[Counting] WARNING: line coordinates fall outside frame bounds — adjust config.yaml")
 
     speed_cfg = config.get("speed_estimation", {})
     speed_estimator = None
@@ -61,6 +66,14 @@ def run_pipeline(config: dict):
         speed_estimator = SpeedEstimator(speed_cfg["pixels_per_meter"], fps_for_speed)
 
     crop_cfg = config.get("cropping", {})
+
+    cifar_cfg = config.get("cifar_classification", {})
+    cifar_classifier = None
+    if cifar_cfg.get("enabled"):
+        cifar_classifier = CifarClassifier(
+            device=config["model"]["device"],
+            model_name=cifar_cfg.get("model_name", "cifar10_resnet20"),
+        )
 
     # --- TensorBoard setup ---
     tb_cfg = config.get("tensorboard", {})
@@ -89,6 +102,7 @@ def run_pipeline(config: dict):
             tracked = tracker.update(boxes, scores, class_ids)
 
             speeds = {}
+            cifar_labels = {}
             for i in range(len(tracked)):
                 box = tracked.xyxy[i]
                 track_id = tracked.tracker_id[i]
@@ -110,12 +124,19 @@ def run_pipeline(config: dict):
                 if crop_cfg.get("enabled"):
                     save_crop(frame, box, crop_cfg["save_dir"], track_id, processed_idx)
 
+                cifar_name, cifar_conf = None, None
+                if cifar_classifier:
+                    cifar_name, cifar_conf = cifar_classifier.predict(frame, box)
+                    if cifar_name:
+                        cifar_labels[track_id] = (cifar_name, cifar_conf)
+
                 log_writer.writerow([
                     processed_idx, track_id, cls_id,
-                    *box, speed_kmh if speed_kmh else ""
+                    *box, speed_kmh if speed_kmh else "",
+                    cifar_name or "", f"{cifar_conf:.3f}" if cifar_conf else ""
                 ])
 
-            frame = draw_tracks(frame, tracked, class_names, speeds)
+            frame = draw_tracks(frame, tracked, class_names, speeds, cifar_labels)
             if counter:
                 frame = draw_counting_line(frame, count_cfg["line_start"], count_cfg["line_end"], counter.count)
 

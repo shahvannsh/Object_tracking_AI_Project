@@ -69,6 +69,12 @@ if uploaded_file and st.button("Run Tracking"):
     st.write("Unique tracked objects per class:")
     st.bar_chart(unique_counts)
 
+    if "cifar_class" in df.columns and df["cifar_class"].notna().any():
+        st.subheader("📊 CIFAR-100 tag distribution")
+        cifar_counts = df["cifar_class"].dropna()
+        cifar_counts = cifar_counts[cifar_counts != ""].value_counts()
+        st.bar_chart(cifar_counts)
+
     st.info(
         "For a more detailed live view (per-frame trends), run:\n\n"
         "`tensorboard --logdir outputs/tensorboard_logs`"
