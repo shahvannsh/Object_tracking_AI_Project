@@ -1,6 +1,7 @@
 model:
-  weights: "yolov8n-oiv7.pt"   # Open Images V7 — 600+ classes (includes Deer, Tiger, Fox, etc.)
-  confidence: 0.4
+  weights: "yolov8s.pt"      # upgraded from n -> s for better accuracy (still CPU-friendly)
+  confidence: 0.35            # slightly lower threshold = catches more true positives
+  iou: 0.45                   # NMS IoU threshold
   device: "cpu"
 
 tracker:
@@ -8,7 +9,7 @@ tracker:
   track_thresh: 0.5
 
 classes:
-  filter: []   # OIV7 class names differ from COCO (e.g. "Person", "Car", "Deer") — leave empty to keep all, or check model.names after first run
+  filter: []   # empty = keep all classes
 
 performance:
   frame_skip: 1
@@ -30,14 +31,14 @@ cropping:
 
 cifar_classification:
   enabled: true
-  model_name: "cifar100_resnet20"   # or cifar10_resnet20, cifar100_resnet32/44/56
+  model_name: "cifar100_resnet56"   # upgraded from resnet20 -> resnet56 for better accuracy
 
 tensorboard:
   enabled: true
   log_dir: "outputs/tensorboard_logs"
 
 video:
-  input_path: "data/raw/animal_3.mp4"
+  input_path: "data/raw/traffic_1.mp4"
   output_path: "outputs/videos/tracked_output.mp4"
   show_live: false
 

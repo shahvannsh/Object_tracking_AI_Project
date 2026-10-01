@@ -21,9 +21,9 @@ uploaded_file = st.file_uploader("Upload a video", type=["mp4", "avi", "mov"])
 
 confidence = st.slider("Detection confidence", 0.1, 0.9, default_config["model"]["confidence"])
 class_options = st.multiselect(
-    "Classes to track",
+    "Classes to track (leave empty for all)",
     ["person", "car", "bicycle", "motorcycle", "bus", "truck"],
-    default=default_config.get("classes", {}).get("filter", ["person", "car"]),
+    default=default_config.get("classes", {}).get("filter", []),
 )
 
 if uploaded_file and st.button("Run Tracking"):
@@ -52,12 +52,9 @@ if uploaded_file and st.button("Run Tracking"):
     with open(config["logging"]["log_path"], "rb") as f:
         st.download_button("Download tracking log (CSV)", f, file_name="tracks.csv")
 
-    # --- Class detection chart ---
     st.subheader("📊 Detections per class")
     df = pd.read_csv(config["logging"]["log_path"])
 
-    class_id_to_name = {v: k for k, v in {}.items()}  # placeholder, filled below
-    # Load class names from the model used in this run
     from ultralytics import YOLO
     model = YOLO(config["model"]["weights"])
     df["class_name"] = df["class"].map(model.names)
@@ -75,7 +72,4 @@ if uploaded_file and st.button("Run Tracking"):
         cifar_counts = cifar_counts[cifar_counts != ""].value_counts()
         st.bar_chart(cifar_counts)
 
-    st.info(
-        "For a more detailed live view (per-frame trends), run:\n\n"
-        "`tensorboard --logdir outputs/tensorboard_logs`"
-    )
+    st.info("Want to compare YOLOv8n/s/m speed & accuracy? Run: `streamlit run benchmark_dashboard.py`")

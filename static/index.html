@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Object Detection Dashboard</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h1>🎯 Object Detection & Tracking Dashboard</h1>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+    <button class="tab-btn" data-tab="comparison">Version Comparison</button>
+    <button class="tab-btn" data-tab="history">Run History</button>
+    <button class="tab-btn" data-tab="about">Algorithms Info</button>
+    <button class="tab-btn" data-tab="versions">Version Info</button>
+  </div>
+
+  <!-- DASHBOARD TAB -->
+  <section id="dashboard" class="tab-content active">
+    <div class="card">
+      <h2>Upload video</h2>
+      <input type="file" id="videoFile" accept="video/*">
+      <button onclick="uploadVideo()">Upload</button>
+      <p id="uploadStatus"></p>
+    </div>
+
+    <div class="card">
+      <h2>Quick summary</h2>
+      <div class="stat-grid">
+        <div class="stat"><span id="statRuns">0</span><label>Total Runs</label></div>
+        <div class="stat"><span id="statAlgos">7</span><label>Algorithms Available</label></div>
+        <div class="stat"><span id="statLastRun">—</span><label>Last Run</label></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Latest result</h2>
+      <table id="latestTable">
+        <thead><tr><th>Algorithm</th><th>Avg FPS</th><th>Avg Inference (ms)</th><th>Avg Det/Frame</th><th>Avg Confidence</th></tr></thead>
+        <tbody><tr><td colspan="5">No runs yet — go to "Version Comparison" to start one.</td></tr></tbody>
+      </table>
+    </div>
+  
+    <div class="card explain-card">
+      <button onclick="explainTab('dashboard')">🧠 Explain with AI</button>
+      <div id="explain-dashboard" class="explain-box"></div>
+    </div>
+  </section>
+
+  <!-- COMPARISON TAB -->
+  <section id="comparison" class="tab-content">
+    <div class="card">
+      <h2>1. Video</h2>
+      <p id="videoPathDisplay">No video uploaded yet — upload one on the Dashboard tab.</p>
+    </div>
+
+    <div class="card">
+      <h2>2. Configure run</h2>
+      <div class="checkboxes">
+        <label><input type="checkbox" value="yolov8n" checked> YOLOv8n</label>
+        <label><input type="checkbox" value="yolov8s"> YOLOv8s</label>
+        <label><input type="checkbox" value="yolov8m"> YOLOv8m</label>
+        <label><input type="checkbox" value="ssd300_vgg16"> SSD300</label>
+        <label><input type="checkbox" value="faster_rcnn_resnet50"> Faster R-CNN</label>
+        <label><input type="checkbox" value="haar_cascade_face"> Haar Cascade (face)</label>
+        <label><input type="checkbox" value="contour_motion"> Contour (motion)</label>
+      </div>
+      <label>Epochs (passes): <input type="number" id="epochs" value="3" min="1" max="10"></label>
+      <label>Max frames per pass: <input type="number" id="maxFrames" value="100" min="10" max="2000"></label>
+      <br><br>
+      <button onclick="startComparison()">Run Comparison</button>
+      <p id="runStatus"></p>
+    </div>
+
+    <div class="card">
+      <h2>3. Results</h2>
+      <table id="resultsTable">
+        <thead><tr><th>Algorithm</th><th>Avg FPS</th><th>Avg Inference (ms)</th><th>Avg Det/Frame</th><th>Avg Confidence</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <canvas id="fpsChart" height="100"></canvas>
+      <canvas id="confChart" height="100"></canvas>
+    </div>
+  
+    <div class="card explain-card">
+      <button onclick="explainTab('comparison')">🧠 Explain with AI</button>
+      <div id="explain-comparison" class="explain-box"></div>
+    </div>
+  </section>
+
+  <!-- HISTORY TAB -->
+  <section id="history" class="tab-content">
+    <div class="card">
+      <h2>Run History</h2>
+      <button onclick="loadHistory()">Refresh History</button>
+      <div id="historyList"></div>
+    </div>
+  
+    <div class="card explain-card">
+      <button onclick="explainTab('history')">🧠 Explain with AI</button>
+      <div id="explain-history" class="explain-box"></div>
+    </div>
+  </section>
+
+  <!-- ABOUT TAB -->
+  <section id="about" class="tab-content">
+    <div class="card">
+      <h2>Algorithms in this comparison</h2>
+      <ul>
+        <li><b>YOLOv8 (n/s/m)</b> — single-stage deep detector, real-time, best overall speed/accuracy tradeoff.</li>
+        <li><b>SSD300 (VGG16)</b> — single-stage detector, faster than two-stage models, lower accuracy on small objects.</li>
+        <li><b>Faster R-CNN (ResNet50)</b> — two-stage detector, generally most accurate, slowest.</li>
+        <li><b>Haar Cascade</b> — classical, lightweight, face-detection only, no confidence score (fixed 1.0), very fast on CPU.</li>
+        <li><b>Contour (motion)</b> — classical background subtraction, detects any moving blob, no class labels.</li>
+      </ul>
+      <p><i>Note: "epochs" here = repeated inference passes per video for stable averaged metrics, not training epochs — these are pretrained/classical algorithms, not being trained here.</i></p>
+    </div>
+  
+    <div class="card explain-card">
+      <button onclick="explainTab('about')">🧠 Explain with AI</button>
+      <div id="explain-about" class="explain-box"></div>
+    </div>
+  </section>
+
+  <!-- VERSIONS TAB -->
+  <section id="versions" class="tab-content">
+    <div class="card">
+      <h2>Environment</h2>
+      <table id="envTable">
+        <thead><tr><th>Component</th><th>Version</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>Algorithm / Model Versions</h2>
+      <table id="algoVersionTable">
+        <thead><tr><th>Algorithm</th><th>Model Source</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  
+    <div class="card explain-card">
+      <button onclick="explainTab('versions')">🧠 Explain with AI</button>
+      <div id="explain-versions" class="explain-box"></div>
+    </div>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>

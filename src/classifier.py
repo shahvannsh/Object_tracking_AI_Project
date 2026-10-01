@@ -31,9 +31,7 @@ CIFAR_STD = (0.2470, 0.2435, 0.2616)
 
 
 class CifarClassifier:
-    """Runs a pretrained CIFAR-10/100 ResNet on cropped detections for a class label."""
-
-    def __init__(self, device: str = "cpu", model_name: str = "cifar100_resnet20"):
+    def __init__(self, device: str = "cpu", model_name: str = "cifar100_resnet56"):
         self.device = device
         self.model = torch.hub.load(
             "chenyaofo/pytorch-cifar-models", model_name, pretrained=True

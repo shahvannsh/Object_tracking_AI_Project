@@ -3,15 +3,17 @@ from ultralytics import YOLO
 
 class Detector:
     def __init__(self, weights_path: str, confidence: float = 0.4,
-                 device: str = "cpu", class_filter=None):
+                 device: str = "cpu", class_filter=None, iou: float = 0.45):
         self.model = YOLO(weights_path)
         self.confidence = confidence
         self.device = device
+        self.iou = iou
         self.class_filter = set(class_filter) if class_filter else None
 
     def detect(self, frame):
         results = self.model.predict(
-            frame, conf=self.confidence, device=self.device, verbose=False
+            frame, conf=self.confidence, iou=self.iou,
+            device=self.device, verbose=False
         )[0]
 
         boxes = results.boxes.xyxy.cpu().numpy()

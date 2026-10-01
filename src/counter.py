@@ -14,8 +14,6 @@ class LineCounter:
         return (x2 - x1) * (py - y1) - (y2 - y1) * (px - x1)
 
     def _crosses_segment(self, p1, p2):
-        """Check the object's movement segment actually intersects the line segment
-        (not just the infinite extension of it)."""
         x1, y1 = self.line_start
         x2, y2 = self.line_end
         x3, y3 = p1

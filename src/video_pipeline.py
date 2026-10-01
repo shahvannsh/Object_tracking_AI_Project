@@ -18,6 +18,7 @@ def run_pipeline(config: dict):
         confidence=config["model"]["confidence"],
         device=config["model"]["device"],
         class_filter=config.get("classes", {}).get("filter"),
+        iou=config["model"].get("iou", 0.45),
     )
     tracker = Tracker(
         track_thresh=config["tracker"]["track_thresh"],
@@ -72,14 +73,13 @@ def run_pipeline(config: dict):
     if cifar_cfg.get("enabled"):
         cifar_classifier = CifarClassifier(
             device=config["model"]["device"],
-            model_name=cifar_cfg.get("model_name", "cifar10_resnet20"),
+            model_name=cifar_cfg.get("model_name", "cifar100_resnet56"),
         )
 
-    # --- TensorBoard setup ---
     tb_cfg = config.get("tensorboard", {})
     tb_writer = None
-    class_counter = Counter()          # total detections per class (all frames)
-    unique_ids_per_class = {}          # class_name -> set of track_ids (unique objects)
+    class_counter = Counter()
+    unique_ids_per_class = {}
     if tb_cfg.get("enabled", True):
         tb_writer = SummaryWriter(tb_cfg.get("log_dir", "outputs/tensorboard_logs"))
 
@@ -142,7 +142,6 @@ def run_pipeline(config: dict):
 
             out.write(frame)
 
-            # Live per-frame detection counts to TensorBoard
             if tb_writer:
                 tb_writer.add_scalar("detections/per_frame_total", len(tracked), processed_idx)
                 frame_class_counts = Counter(class_names)
